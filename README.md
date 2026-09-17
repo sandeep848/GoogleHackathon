@@ -28,8 +28,8 @@ flowchart LR
 ## Local setup
 
 ~~~bash
-git clone -b speechtext https://github.com/sandeep848/GoogleHackathon.git
-cd GoogleHackathon
+git clone -b speechtext https://github.com/sandeep848/google-cloud-speechtext.git
+cd google-cloud-speechtext
 npm install
 gcloud auth application-default login
 export GOOGLE_CLOUD_PROJECT="your-project-id"
