@@ -1,86 +1,89 @@
-# SpeechText App
+# SpeechText: Google Cloud Speech Application
 
-Small App Engine web app that lets a user:
+[![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933.svg)](https://nodejs.org/)
+[![Google Cloud](https://img.shields.io/badge/Platform-Google%20Cloud-4285F4.svg)](https://cloud.google.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-- record audio in the browser
-- transcribe it with Google Cloud Speech-to-Text
-- store transcript metadata in Firestore
-- optionally save the raw audio file in Cloud Storage
+A browser-based speech transcription application built for Google Cloud. Users can record audio, transcribe it with Speech-to-Text, store transcript metadata in Firestore and optionally retain audio in Cloud Storage.
+
+## Architecture
+
+~~~mermaid
+flowchart LR
+    A["Browser recorder"] --> B["Express server"]
+    B --> C["Speech-to-Text"]
+    C --> D["Transcript"]
+    D --> E["Firestore"]
+    B --> F["Cloud Storage"]
+~~~
 
 ## Stack
 
-- Node.js + Express
+- Node.js and Express
 - Google Cloud Speech-to-Text
 - Firestore
 - Cloud Storage
 - App Engine Standard
 
-## Required Google Cloud setup
+## Local setup
 
-Enable these APIs in the target project:
+~~~bash
+git clone -b speechtext https://github.com/sandeep848/GoogleHackathon.git
+cd GoogleHackathon
+npm install
+gcloud auth application-default login
+export GOOGLE_CLOUD_PROJECT="your-project-id"
+npm start
+~~~
+
+The repository's default branch is currently `speechtext`.
+
+## Google Cloud configuration
+
+Enable:
 
 - `speech.googleapis.com`
 - `firestore.googleapis.com`
 - `storage.googleapis.com`
 - `appengine.googleapis.com`
 
-Create a Firestore database in Native mode if you have not already.
+Create Firestore in Native mode. Grant the App Engine service account only the permissions required for Speech-to-Text, Firestore and the selected storage bucket.
 
-The App Engine default service account needs permission to use:
+### Optional environment variables
 
-- Speech-to-Text
-- Firestore
-- Cloud Storage
+| Variable | Purpose | Default |
+|---|---|---|
+| `TRANSCRIPTS_BUCKET` | Bucket used for retained audio | Project App Engine bucket |
+| `TRANSCRIPTS_COLLECTION` | Firestore collection | `transcriptions` |
+| `TRANSCRIPTS_LANGUAGE` | Recognition language | `en-US` |
+| `TRANSCRIPTS_MODEL` | Speech recognition model | `short` |
 
-## Local run
+## Deployment
 
-Install dependencies:
-
-```bash
-npm install
-```
-
-Start the app:
-
-```bash
-npm start
-```
-
-For local development, authenticate with Application Default Credentials:
-
-```bash
-gcloud auth application-default login
-```
-
-The app expects `GOOGLE_CLOUD_PROJECT` to be available. Example:
-
-```bash
-export GOOGLE_CLOUD_PROJECT="your-project-id"
-```
-
-Optional environment variables:
-
-- `TRANSCRIPTS_BUCKET`: Cloud Storage bucket for uploaded audio. If omitted, the app tries `${GOOGLE_CLOUD_PROJECT}.appspot.com`.
-- `TRANSCRIPTS_COLLECTION`: Firestore collection name. Default: `transcriptions`.
-- `TRANSCRIPTS_LANGUAGE`: Default language code. Default: `en-US`.
-- `TRANSCRIPTS_MODEL`: Speech model. Default: `short`.
-
-## Deploy to App Engine
-
-From the repo root:
-
-```bash
+~~~bash
 gcloud app deploy
-```
-
-After deploy:
-
-```bash
 gcloud app browse
-```
+~~~
 
-## Notes
+## Data flow and failure behavior
 
-- The frontend records audio as `webm` with Opus when supported.
-- Transcript text is always written to Firestore.
-- If Cloud Storage upload fails, the app still saves the transcript in Firestore.
+Audio is recorded as WebM/Opus when supported. Successful transcriptions are written to Firestore. Storage is optional: if an audio upload fails, transcript persistence can still succeed.
+
+## Security and privacy
+
+- Do not commit service-account keys.
+- Use Application Default Credentials locally and workload identity in hosted environments.
+- Inform users before recording or retaining audio.
+- Configure a retention period for stored audio and transcripts.
+- Apply least-privilege IAM permissions and restrict bucket access.
+
+## Limitations
+
+- Browser recording support depends on available media codecs.
+- Recognition accuracy varies with language, microphone quality, background noise and speaker characteristics.
+- The current project does not include automated tests or infrastructure provisioning.
+- Recorded speech may be sensitive personal data and must be handled according to applicable consent and privacy requirements.
+
+## License
+
+Distributed under the [MIT License](LICENSE).
